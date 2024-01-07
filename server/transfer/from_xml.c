@@ -6,6 +6,89 @@
 #include "../database/include/util/util.h"
 #include "../socket_wrapper.h"
 
+int validateXmlAgainstSchemaFile(const char *xmlString, const char *schemaFilePath) {
+    LIBXML_TEST_VERSION
+
+    // Создание XML-документа из строки
+    xmlDocPtr doc = xmlReadMemory(xmlString, strlen(xmlString), "noname.xml", NULL, 0);
+    if (doc == NULL) {
+        fprintf(stderr, "Failed to parse the input XML.\n");
+        return -1; // Ошибка при парсинге XML
+    }
+
+    // Создание XML-схемы из файла
+    xmlSchemaParserCtxtPtr parserCtxt = xmlSchemaNewParserCtxt(schemaFilePath);
+    if (parserCtxt == NULL) {
+        fprintf(stderr, "Failed to parse the input XML schema.\n");
+        xmlFreeDoc(doc);
+        return -2; // Ошибка при парсинге XML схемы
+    }
+
+    xmlSchemaPtr schema = xmlSchemaParse(parserCtxt);
+    if (schema == NULL) {
+        fprintf(stderr, "Failed to parse the input XML schema.\n");
+        xmlSchemaFreeParserCtxt(parserCtxt);
+        xmlFreeDoc(doc);
+        return -2; // Ошибка при парсинге XML схемы
+    }
+
+    // Создание контекста валидации
+    xmlSchemaValidCtxtPtr validCtxt = xmlSchemaNewValidCtxt(schema);
+    if (validCtxt == NULL) {
+        fprintf(stderr, "Failed to create a validation context.\n");
+        xmlSchemaFree(schema);
+        xmlSchemaFreeParserCtxt(parserCtxt);
+        xmlFreeDoc(doc);
+        return -3; // Ошибка при создании контекста валидации
+    }
+
+    // Валидация XML по схеме
+    int isValid = xmlSchemaValidateDoc(validCtxt, doc);
+
+    // Освобождение ресурсов
+    xmlSchemaFreeValidCtxt(validCtxt);
+    xmlSchemaFree(schema);
+    xmlSchemaFreeParserCtxt(parserCtxt);
+    xmlFreeDoc(doc);
+    xmlCleanupParser();
+
+    return isValid; // Возвращаем 0, если XML соответствует схеме, и отрицательное число в противном случае
+}
+
+char *create_xml_document(const char *message_content) {
+    xmlDocPtr doc = NULL;           // XML-документ
+    xmlNodePtr root = NULL;         // Корневой элемент
+    xmlNodePtr messageNode = NULL;  // Элемент Message
+
+    LIBXML_TEST_VERSION
+
+
+    doc = xmlNewDoc(BAD_CAST "1.0");
+    if (doc == NULL) {
+        fprintf(stderr, "Failed to create XML document.\n");
+        return NULL;
+    }
+
+
+    root = xmlNewNode(NULL, BAD_CAST "Root");
+    xmlDocSetRootElement(doc, root);
+
+
+    messageNode = xmlNewNode(NULL, BAD_CAST "Message");
+    xmlNodeSetContent(messageNode, BAD_CAST message_content);
+    xmlAddChild(root, messageNode);
+
+    xmlChar *xmlString = NULL;
+    int xmlStringSize = 0;
+    xmlDocDumpFormatMemory(doc, &xmlString, &xmlStringSize, 1);
+
+
+    xmlFreeDoc(doc);
+    xmlCleanupParser();
+
+    printf("\nSchema validation: %d\n", validateXmlAgainstSchemaFile(xmlString, SCHEMA_RESPONSE_FILE));
+    return xmlString;
+}
 
 bool stringToBool(const char *str) {
     if (strcmp(str, "\"true\"") == 0 || strcmp(str, "1") == 0) {
@@ -95,23 +178,9 @@ void *handleInsert(xmlNodePtr root, FILE *file, int client_socket) {
     }
 
     EntityRecord entityRecord = {array, NULL};
-    NameTypeBlock *nameTypeBlock1 = initNameTypeBlock("Name", STRING);
-    NameTypeBlock *nameTypeBlock2 = initNameTypeBlock("Surname", STRING);
-    NameTypeBlock *nameTypeBlock3 = initNameTypeBlock("Age", INT);
-    NameTypeBlock *nameTypeBlock4 = initNameTypeBlock("Score", DOUBLE);
-    NameTypeBlock *nameTypeBlock5 = initNameTypeBlock("Sex", BOOL);
-
-    // 1 table
-    NameTypeBlock nameTypeBlocks1[5] = {
-            *nameTypeBlock1,
-            *nameTypeBlock2,
-            *nameTypeBlock3,
-            *nameTypeBlock4,
-            *nameTypeBlock5
-    };
-    printEntityRecord(&entityRecord, 5, nameTypeBlocks1);
     insertRecordIntoTable(file, &entityRecord, tableName);
-    return "Your insert was successfully completed\n";
+    send_data(client_socket, create_xml_document("Your insert was successfully completed\n"));
+    send_data(client_socket, create_xml_document("End"));
 }
 
 xmlNodePtr traverseChildren(xmlNodePtr node, int childNumber) {
@@ -250,8 +319,8 @@ void *handleDelete(xmlNodePtr root, FILE *file, int client_socket) {
             deleteRecordFromTable(file, tableName, predMass->predicate, predMass->predicateNumber);
         }
     }
-    send_data(client_socket, "Your entity successfully deleted");
-    send_data(client_socket, "End");
+    send_data(client_socket, create_xml_document("Your entity successfully deleted"));
+    send_data(client_socket, create_xml_document("End"));
 }
 
 void doUpdateInDataBase(FILE *file, PredMass *predMass, char *updateField, char *tableName, FieldValue *newFieldValue) {
@@ -302,8 +371,8 @@ void *handleUpdate(xmlNodePtr root, FILE *file, int client_socket) {
 //            deleteRecordFromTable(file, tableName, predMass->predicate, predMass->predicateNumber);
         }
     }
-    send_data(client_socket, "Your entity successfully updated");
-    send_data(client_socket, "End");
+    send_data(client_socket, create_xml_document("Your entity successfully updated"));
+    send_data(client_socket, create_xml_document("End"));
 }
 
 JoinWrapper *formJoin(xmlNodePtr joinNode) {
@@ -339,9 +408,10 @@ void doSelectInDataBase(char *tableName, FILE *file, int client_socket) {
     while (hasNext(iterator, file)) {
         EntityRecord *entityRecord = next(iterator, file);
         send_data(client_socket,
-                  printEntityRecord(entityRecord, tableOffsetBlock->fieldsNumber, tableOffsetBlock->nameTypeBlock));
+                  create_xml_document(printEntityRecord(entityRecord, tableOffsetBlock->fieldsNumber,
+                                                        tableOffsetBlock->nameTypeBlock)));
     }
-    send_data(client_socket, "End");
+    send_data(client_socket, create_xml_document("End"));
 }
 
 void doSelectInDataBaseWithCond(char *tableName, PredMass *predMass, FILE *file, int client_socket) {
@@ -350,9 +420,10 @@ void doSelectInDataBaseWithCond(char *tableName, PredMass *predMass, FILE *file,
     while (hasNext(iterator, file)) {
         EntityRecord *entityRecord = next(iterator, file);
         send_data(client_socket,
-                  printEntityRecord(entityRecord, tableOffsetBlock->fieldsNumber, tableOffsetBlock->nameTypeBlock));
+                  create_xml_document(printEntityRecord(entityRecord, tableOffsetBlock->fieldsNumber,
+                                                        tableOffsetBlock->nameTypeBlock)));
     }
-    send_data(client_socket, "End");
+    send_data(client_socket, create_xml_document("End"));
 }
 
 NameTypeBlock *
@@ -403,9 +474,9 @@ void doSelectInDataBaseWithJoin(char *tableName, JoinWrapper *joinWrapper, FILE 
                 file,
                 fieldNumber,
                 joinWrapper->rightFieldName);
-        send_data(client_socket, printEntityRecord(entityRecord, fieldsNumber, newNameTypeBlock));
+        send_data(client_socket, create_xml_document(printEntityRecord(entityRecord, fieldsNumber, newNameTypeBlock)));
     }
-    send_data(client_socket, "End");
+    send_data(client_socket, create_xml_document("End"));
 }
 
 void doSelectInDataBaseWithJoinAndCond(char *tableName, JoinWrapper *joinWrapper, PredMass *predMass, FILE *file,
@@ -438,9 +509,9 @@ void doSelectInDataBaseWithJoinAndCond(char *tableName, JoinWrapper *joinWrapper
                 file,
                 fieldNumber,
                 joinWrapper->rightFieldName);
-        printf("%s", printEntityRecord(entityRecord, fieldsNumber, newNameTypeBlock));
+        send_data(client_socket, create_xml_document(printEntityRecord(entityRecord, fieldsNumber, newNameTypeBlock)));
     }
-    send_data(client_socket, "End");
+    send_data(client_socket, create_xml_document("End"));
 }
 
 void *handleSelect(xmlNodePtr root, FILE *file, int client_socket) {
@@ -478,17 +549,14 @@ void *from_xml(char *xml, FILE *file, int client_socket) {
     xmlDocPtr doc;
     xmlNodePtr root, node;
 
-    // Инициализация библиотеки libxml2
     LIBXML_TEST_VERSION
 
-    // Парсинг строки в XML-документ
     doc = xmlReadMemory(xml, strlen(xml), "noname.xml", NULL, 0);
     if (doc == NULL) {
         fprintf(stderr, "Failed to parse the input XML.\n");
         return "Failed to parse the input XML.\n";
     }
 
-    // Получение корневого элемента
     root = xmlDocGetRootElement(doc);
     if (root == NULL) {
         fprintf(stderr, "Empty document.\n");

@@ -8,7 +8,7 @@
 #include <arpa/inet.h>
 
 #define MAX_BUFFER_SIZE 1024
-#define SERVER_PORT 8081
+#define SERVER_PORT 8088
 
 int create_server_socket();
 int create_client_socket(const char *server_ip);

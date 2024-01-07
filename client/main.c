@@ -11,17 +11,17 @@ int main() {
 
     char buffer[MAX_BUFFER_SIZE];
 
-    int times = 2;
+    int times = 5;
     while (times) {
-        times--;
+//        times--;
         printf("Enter a message to send to the server: ");
         input();
         char * xml = to_xml();
+
         strncpy(buffer, xml, sizeof(buffer));
         freeAstTree();
         send_data(client_socket, buffer);
         receive_data(client_socket, buffer);
-        printf("Received from server: %s\n", buffer);
     }
     close_socket(client_socket);
 

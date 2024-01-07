@@ -1,7 +1,6 @@
 #include "socket_wrapper.h"
 #include "transfer/from_xml.h"
 #include "database/include/file/tableBlocks.h"
-#include "database/include/file/fileApi.h"
 #include "database/include/util/unitTests.h"
 
 char *insertXML();
@@ -37,9 +36,9 @@ int main() {
     int client_socket = accept_connection(server_socket);
     printf("Connection established with client.\n");
 
-    int times = 2;
+    int times = 10;
     while (times) {
-        times--;
+//        times--;
         char buffer[MAX_BUFFER_SIZE];
         receive_data(client_socket, buffer);
 
@@ -47,8 +46,6 @@ int main() {
 
         char *xml = buffer;
         from_xml(xml, file, client_socket);
-
-        send_data(client_socket, buffer);
     }
 
     close_socket(client_socket);

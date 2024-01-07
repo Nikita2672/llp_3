@@ -3,8 +3,11 @@
 
 #include <libxml/parser.h>
 #include <libxml/tree.h>
+#include <libxml/xmlschemas.h>
 #include "stdio.h"
 #include "../database/include/query/query.h"
+
+#define SCHEMA_RESPONSE_FILE "/home/iwaa0303/CLionProjects/llp_3/server/schema/response_schema.xsd"
 
 void *from_xml(char *xml, FILE *file, int client_socket);
 

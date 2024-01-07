@@ -48,6 +48,7 @@ void connect_to_server(int socket_fd, const char *server_ip) {
 }
 
 void send_data(int socket_fd, const char *data) {
+    printf("Sended data: %s", data);
     send(socket_fd, data, strlen(data), 0);
 }
 
