@@ -14,8 +14,16 @@
                 </xs:element>
                 <xs:element name="tableName" type="xs:string"/>
                 <xs:choice>
+                    <!-- If requestType is UPDATE -->
                     <xs:sequence>
-                        <!-- If requestType is DELETE or SELECT -->
+                        <xs:element name="updateField">
+                            <xs:complexType>
+                                <xs:sequence>
+                                    <xs:element name="updateFieldName" type="xs:string"/>
+                                    <xs:element name="updateFieldValue" type="xs:string"/>
+                                </xs:sequence>
+                            </xs:complexType>
+                        </xs:element>
                         <xs:element name="filter" minOccurs="0">
                             <xs:complexType>
                                 <xs:sequence>
@@ -28,7 +36,8 @@
                                                             <xs:element name="isColumnName" type="xs:boolean"/>
                                                             <xs:element name="value" minOccurs="0">
                                                                 <xs:simpleType>
-                                                                    <xs:union memberTypes="xs:string xs:int xs:double xs:boolean"/>
+                                                                    <xs:union
+                                                                            memberTypes="xs:string xs:int xs:double xs:boolean"/>
                                                                 </xs:simpleType>
                                                             </xs:element>
                                                         </xs:sequence>
@@ -49,7 +58,8 @@
                                                             <xs:element name="isColumnName" type="xs:boolean"/>
                                                             <xs:element name="value" minOccurs="0">
                                                                 <xs:simpleType>
-                                                                    <xs:union memberTypes="xs:string xs:int xs:double xs:boolean"/>
+                                                                    <xs:union
+                                                                            memberTypes="xs:string xs:int xs:double xs:boolean"/>
                                                                 </xs:simpleType>
                                                             </xs:element>
                                                         </xs:sequence>
@@ -62,14 +72,87 @@
                             </xs:complexType>
                         </xs:element>
                     </xs:sequence>
-                    <xs:element name="join">
-                        <xs:complexType>
-                            <xs:sequence>
-                                <xs:element name="joinConditions" type="JoinConditionType"/>
-                                <xs:element name="filterConditions" type="FilterConditionType" minOccurs="0"/>
-                            </xs:sequence>
-                        </xs:complexType>
-                    </xs:element>
+
+                    <!-- If requestType is DELETE or SELECT -->
+                    <xs:sequence>
+                        <xs:element name="filter" minOccurs="0">
+                            <xs:complexType>
+                                <xs:sequence>
+                                    <xs:element name="filter" maxOccurs="unbounded">
+                                        <xs:complexType>
+                                            <xs:sequence>
+                                                <xs:element name="leftOp">
+                                                    <xs:complexType>
+                                                        <xs:sequence>
+                                                            <xs:element name="isColumnName" type="xs:boolean"/>
+                                                            <xs:element name="value" minOccurs="0">
+                                                                <xs:simpleType>
+                                                                    <xs:union
+                                                                            memberTypes="xs:string xs:int xs:double xs:boolean"/>
+                                                                </xs:simpleType>
+                                                            </xs:element>
+                                                        </xs:sequence>
+                                                    </xs:complexType>
+                                                </xs:element>
+                                                <xs:element name="operator">
+                                                    <xs:simpleType>
+                                                        <xs:restriction base="xs:string">
+                                                            <xs:enumeration value="=="/>
+                                                            <xs:enumeration value="&lt;"/>
+                                                            <xs:enumeration value="&gt;"/>
+                                                        </xs:restriction>
+                                                    </xs:simpleType>
+                                                </xs:element>
+                                                <xs:element name="rightOp">
+                                                    <xs:complexType>
+                                                        <xs:sequence>
+                                                            <xs:element name="isColumnName" type="xs:boolean"/>
+                                                            <xs:element name="value" minOccurs="0">
+                                                                <xs:simpleType>
+                                                                    <xs:union
+                                                                            memberTypes="xs:string xs:int xs:double xs:boolean"/>
+                                                                </xs:simpleType>
+                                                            </xs:element>
+                                                        </xs:sequence>
+                                                    </xs:complexType>
+                                                </xs:element>
+                                            </xs:sequence>
+                                        </xs:complexType>
+                                    </xs:element>
+                                </xs:sequence>
+                            </xs:complexType>
+                        </xs:element>
+                        <xs:element name="join" minOccurs="0">
+                            <xs:complexType>
+                                <xs:sequence>
+                                    <xs:element name="leftOperand">
+                                        <xs:complexType>
+                                            <xs:sequence>
+                                                <xs:element name="leftTable" type="xs:string"/>
+                                                <xs:element name="leftField" type="xs:string"/>
+                                            </xs:sequence>
+                                        </xs:complexType>
+                                    </xs:element>
+                                    <xs:element name="rightOperand">
+                                        <xs:complexType>
+                                            <xs:sequence>
+                                                <xs:element name="rightTable" type="xs:string"/>
+                                                <xs:element name="rightField" type="xs:string"/>
+                                            </xs:sequence>
+                                        </xs:complexType>
+                                    </xs:element>
+                                </xs:sequence>
+                            </xs:complexType>
+                        </xs:element>
+                        <xs:element name="selectedVal" minOccurs="0">
+                            <xs:complexType>
+                                <xs:sequence>
+                                    <xs:element name="entity" type="xs:string" minOccurs="0"/>
+                                    <xs:element name="field" type="xs:string" minOccurs="0"/>
+                                </xs:sequence>
+                            </xs:complexType>
+                        </xs:element>
+                    </xs:sequence>
                     <!-- If requestType is INSERT -->
                     <xs:element name="insertValues" minOccurs="0">
                         <xs:complexType>
@@ -77,47 +160,8 @@
                                 <xs:element name="field" maxOccurs="unbounded">
                                     <xs:complexType>
                                         <xs:sequence>
-                                            <xs:element name="type" type="Types"/>
+                                            <xs:element name="type" type="Literal"/>
                                             <xs:element name="value" type="xs:string"/>
-                                        </xs:sequence>
-                                    </xs:complexType>
-                                </xs:element>
-                            </xs:sequence>
-                        </xs:complexType>
-                    </xs:element>
-                    <!-- If requestType is UPDATE -->
-                    <xs:element name="updateValues" minOccurs="0">
-                        <xs:complexType>
-                            <xs:sequence>
-                                <xs:element name="field" maxOccurs="unbounded">
-                                    <xs:complexType>
-                                        <xs:sequence>
-                                            <xs:element name="name" type="xs:string"/>
-                                            <xs:element name="type">
-                                                <xs:simpleType>
-                                                    <xs:restriction base="xs:string">
-                                                        <xs:enumeration value="string"/>
-                                                        <xs:enumeration value="int"/>
-                                                        <xs:enumeration value="double"/>
-                                                        <xs:enumeration value="boolean"/>
-                                                    </xs:restriction>
-                                                </xs:simpleType>
-                                            </xs:element>
-                                        </xs:sequence>
-                                    </xs:complexType>
-                                </xs:element>
-                            </xs:sequence>
-                        </xs:complexType>
-                    </xs:element>
-                    <!-- If requestType is CREATE_TABLE -->
-                    <xs:element name="fields" minOccurs="0">
-                        <xs:complexType>
-                            <xs:sequence>
-                                <xs:element name="field" maxOccurs="unbounded" minOccurs="0">
-                                    <xs:complexType>
-                                        <xs:sequence>
-                                            <xs:element name="name" type="xs:string"/>
-                                            <xs:element name="type" type="xs:string"/>
                                         </xs:sequence>
                                     </xs:complexType>
                                 </xs:element>
@@ -128,29 +172,12 @@
             </xs:sequence>
         </xs:complexType>
     </xs:element>
-    <xs:complexType name="JoinConditionType">
-        <xs:sequence>
-            <xs:element name="leftTable" type="xs:string"/>
-            <xs:element name="leftColumn" type="xs:string"/>
-            <xs:element name="operator" type="xs:string"/>
-            <xs:element name="rightTable" type="xs:string"/>
-            <xs:element name="rightColumn" type="xs:string"/>
-        </xs:sequence>
-    </xs:complexType>
-    <xs:complexType name="FilterConditionType">
-        <xs:sequence>
-            <xs:element name="table" type="xs:string"/>
-            <xs:element name="column" type="xs:string"/>
-            <xs:element name="operator" type="xs:string"/>
-            <xs:element name="value" type="xs:string"/>
-        </xs:sequence>
-    </xs:complexType>
-    <xs:complexType name="Types">
-        <xs:sequence>
-            <xs:element name="INT" type="xs:string"/>
-            <xs:element name="BOOL" type="xs:string"/>
-            <xs:element name="STR" type="xs:string"/>
-            <xs:element name="FLOAT" type="xs:string"/>
-        </xs:sequence>
-    </xs:complexType>
+    <xs:simpleType name="Literal">
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="STRING_LITERAL"/>
+            <xs:enumeration value="INTEGER_LITERAL"/>
+            <xs:enumeration value="DOUBLE_LITERAL"/>
+            <xs:enumeration value="BOOL_LITERAL"/>
+        </xs:restriction>
+    </xs:simpleType>
 </xs:schema>
