@@ -17,8 +17,8 @@ int main() {
         char * xml = to_xml();
         strncpy(buffer, xml, sizeof(buffer));
         freeAstTree();
-        send_data(client_socket, buffer);
-        receive_data(client_socket, buffer);
+//        send_data(client_socket, buffer);
+//        receive_data(client_socket, buffer);
         printf("Received from server: %s\n", buffer);
     }
 //    close_socket(client_socket);

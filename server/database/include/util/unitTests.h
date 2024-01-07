@@ -14,9 +14,9 @@
 #define FILE_NAME_1 "C:\\Users\\iwaa0\\CLionProjects\\llp\\database\\test\\testInsert.bin"
 #define FILE_NAME_2 "C:\\Users\\iwaa0\\CLionProjects\\llp\\database\\test\\data.bin"
 #else
-#define FILE_NAME "/home/iwaa0303/CLionProjects/server/database/test/file.bin"
-#define FILE_NAME_1 "/home/iwaa0303/CLionProjects/server/database/test/testInsert.bin"
-#define FILE_NAME_2 "/home/iwaa0303/CLionProjects/server/database/test/data.bin"
+#define FILE_NAME "/home/iwaa0303/CLionProjects/llp_3/server/database/test/file.bin"
+#define FILE_NAME_1 "/home/iwaa0303/CLionProjects/llp_3/server/database/test/testInsert.bin"
+#define FILE_NAME_2 "/home/iwaa0303/CLionProjects/llp_3/server/database/test/data.bin"
 #endif
 
 void test1(void);

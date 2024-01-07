@@ -16,11 +16,11 @@
 #define FILE_DELETE "C:\\Users\\iwaa0\\CLionProjects\\llp\\database\\test\\delete_insert_performance.txt"
 #define FILE_INSERT "C:\\Users\\iwaa0\\CLionProjects\\llp\\database\\test\\insert_delete_performance.txt"
 #else
-#define FILE_INSERT_DATA "/home/iwaa0303/CLionProjects/database/src/util/insert_performance_data.txt"
-#define FILE_UPDATE_DATA "/home/iwaa0303/CLionProjects/database/src/util/update_performance_data.txt"
-#define FILE_DELETE_DATA "/home/iwaa0303/CLionProjects/database/src/util/delete_performance_data.txt"
-#define FILE_DELETE "/home/iwaa0303/CLionProjects/database/src/util/delete_insert_performance.txt"
-#define FILE_INSERT "/home/iwaa0303/CLionProjects/database/src/util/insert_delete_performance.txt"
+#define FILE_INSERT_DATA "/home/iwaa0303/CLionProjects/llp_3/server/database/src/util/insert_performance_data.txt"
+#define FILE_UPDATE_DATA "/home/iwaa0303/CLionProjects/llp_3/server/database/src/util/update_performance_data.txt"
+#define FILE_DELETE_DATA "/home/iwaa0303/CLionProjects/llp_3/server/database/src/util/delete_performance_data.txt"
+#define FILE_DELETE "/home/iwaa0303/CLionProjects/llp_3/server/database/src/util/delete_insert_performance.txt"
+#define FILE_INSERT "/home/iwaa0303/CLionProjects/llp_3/server/database/src/util/insert_delete_performance.txt"
 #endif
 void testInsertPerformance(int64_t amountData);
 
