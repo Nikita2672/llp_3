@@ -53,6 +53,10 @@ void send_data(int socket_fd, const char *data) {
 
 void receive_data(int socket_fd, char *buffer) {
     recv(socket_fd, buffer, MAX_BUFFER_SIZE, 0);
+    while (strcmp(buffer, "End") != 0) {
+        printf("%s\n", buffer);
+        recv(socket_fd, buffer, MAX_BUFFER_SIZE, 0);
+    }
 }
 
 void close_socket(int socket_fd) {

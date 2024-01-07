@@ -5,7 +5,7 @@
 #include "../../include/file/tableBlocks.h"
 #include "stdio.h"
 
-void printEntityRecord(EntityRecord *entityRecord, uint16_t fieldsNumber, NameTypeBlock *nameTypeBlock);
+char *printEntityRecord(EntityRecord *entityRecord, uint16_t fieldsNumber, NameTypeBlock *nameTypeBlock);
 
 char *cutString(char *string, uint64_t start, uint64_t end);
 

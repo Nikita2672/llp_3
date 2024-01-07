@@ -10,44 +10,49 @@ char *deleteXML();
 
 char *updateXML();
 
+char *selectWithJoin();
+
+char *selectWithCond();
+
+char *selectXML();
+
+char *selectWithJoinAndCond();
+
 xmlNodePtr getCond();
 
 int main() {
-//    test1();
-//    test2();
-//    test5();
+    test1();
+    test2();
+    test5();
+    test10();
     FILE *file = fopen("/home/iwaa0303/CLionProjects/llp_3/server/database/test/file.bin", "rb+");
-    char *xml = updateXML();
-
-    printf("%s\n", from_xml(xml, file));
-
-//    xmlNodePtr root = getCond();
-//    printf("%s\n", traverseChildren(root, 3)->name);
 
 
-//    int server_socket = create_server_socket();
-//    bind_socket(server_socket);
-//    listen_for_connections(server_socket);
-//
-//    printf("Server waiting for connections...\n");
-//
-//    int client_socket = accept_connection(server_socket);
-//    printf("Connection established with client.\n");
-//
-//    int times = 5;
-//    while (times) {
-//        times--;
-//        char buffer[MAX_BUFFER_SIZE];
-//        receive_data(client_socket, buffer);
-//
-//        printf("Received from client: %s\n", buffer);
-//
-//        // Echo the received data back to the client
-//        send_data(client_socket, buffer);
-//    }
-//
-//    close_socket(client_socket);
-//    close_socket(server_socket);
+    int server_socket = create_server_socket();
+    bind_socket(server_socket);
+    listen_for_connections(server_socket);
+
+    printf("Server waiting for connections...\n");
+
+    int client_socket = accept_connection(server_socket);
+    printf("Connection established with client.\n");
+
+    int times = 2;
+    while (times) {
+        times--;
+        char buffer[MAX_BUFFER_SIZE];
+        receive_data(client_socket, buffer);
+
+        printf("Received from client: %s\n", buffer);
+
+        char *xml = buffer;
+        from_xml(xml, file, client_socket);
+
+        send_data(client_socket, buffer);
+    }
+
+    close_socket(client_socket);
+    close_socket(server_socket);
 
     return 0;
 }
@@ -206,5 +211,107 @@ char *updateXML() {
            "      </condition>"
            "    </AND>"
            "  </filter>"
+           "</Root>";
+}
+
+char *selectXML() {
+    return "<Root>"
+           "  <requestType>SELECT_QUERY</requestType>"
+           "  <tableName>User</tableName>"
+           "  <selectedVal>"
+           "    <entity>user</entity>"
+           "  </selectedVal>"
+           "</Root>";
+}
+
+char *selectWithCond() {
+    return "<Root>"
+           "  <requestType>SELECT_QUERY</requestType>"
+           "  <tableName>User</tableName>"
+           "  <filter>"
+           "    <AND>"
+           "      <condition>"
+           "        <leftOp>Age</leftOp>"
+           "        <operator>&gt;</operator>"
+           "        <rightOp>19</rightOp>"
+           "      </condition>"
+           "      <condition>"
+           "        <leftOp>Score</leftOp>"
+           "        <operator>==</operator>"
+           "        <rightOp>128.000000</rightOp>"
+           "      </condition>"
+           "    </AND>"
+           "  </filter>"
+           "  <selectedVal>"
+           "    <entity>user</entity>"
+           "  </selectedVal>"
+           "</Root>";
+}
+
+char *selectWithJoinAndCond() {
+    return "<Root>"
+           "  <requestType>SELECT_QUERY</requestType>"
+           "  <tableName>invoiceCollection</tableName>"
+           "  <filter>"
+           "    <AND>"
+           "      <OR>"
+           "        <condition>"
+           "          <leftOp>fieldString</leftOp>"
+           "          <operator>==</operator>"
+           "          <rightOp>\"String\"</rightOp>"
+           "        </condition>"
+           "        <AND>"
+           "          <condition>"
+           "            <leftOp>fieldInteger</leftOp>"
+           "            <operator>==</operator>"
+           "            <rightOp>23</rightOp>"
+           "          </condition>"
+           "          <condition>"
+           "            <leftOp>fieldDouble</leftOp>"
+           "            <operator>==</operator>"
+           "            <rightOp>2.710000</rightOp>"
+           "          </condition>"
+           "        </AND>"
+           "      </OR>"
+           "      <condition>"
+           "        <leftOp>zxc</leftOp>"
+           "        <operator>&gt;</operator>"
+           "        <rightOp>23</rightOp>"
+           "      </condition>"
+           "    </AND>"
+           "  </filter>"
+           "  <Join>"
+           "    <leftOperand>"
+           "      <leftTable>invoice</leftTable>"
+           "      <leftField>invoiceTypeId</leftField>"
+           "    </leftOperand>"
+           "    <rightOperand>"
+           "      <rightTable>invoiceType</rightTable>"
+           "      <rightField>id</rightField>"
+           "    </rightOperand>"
+           "  </Join>"
+           "  <selectedVal>"
+           "    <entity>invoice</entity>"
+           "  </selectedVal>"
+           "</Root>";
+}
+
+char *selectWithJoin() {
+    return "<Root>"
+           "  <requestType>SELECT_QUERY</requestType>"
+           "  <tableName>Employee</tableName>"
+           "  <join>"
+           "    <leftOperand>"
+           "      <leftTable>Employee</leftTable>"
+           "      <leftField>DepartmentId</leftField>"
+           "    </leftOperand>"
+           "    <rightOperand>"
+           "      <rightTable>Department</rightTable>"
+           "      <rightField>DepartmentId</rightField>"
+           "    </rightOperand>"
+           "  </join>"
+           "  <selectedVal>"
+           "    <entity>Employee</entity>"
+           "  </selectedVal>"
            "</Root>";
 }

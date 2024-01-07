@@ -3,29 +3,48 @@
 #include "../../include/file/iterator.h"
 #include "../../include/file/fileApi.h"
 
-void printEntityRecord(EntityRecord *entityRecord, uint16_t fieldsNumber, NameTypeBlock *nameTypeBlock) {
+char *printEntityRecord(EntityRecord *entityRecord, uint16_t fieldsNumber, NameTypeBlock *nameTypeBlock) {
+    size_t bufferSize = 4096;
+    char *result = (char *)malloc(bufferSize);
+    if (result == NULL) {
+        fprintf(stderr, "Failed to allocate memory for result buffer.\n");
+        exit(EXIT_FAILURE);
+    }
+
+    size_t offset = 0;
     for (uint16_t i = 0; i < fieldsNumber; i++) {
-        printf("%s: ", nameTypeBlock[i].fieldName);
+        int bytesWritten = snprintf(result + offset, bufferSize - offset, "%s: ", nameTypeBlock[i].fieldName);
+        if (bytesWritten < 0) {
+            fprintf(stderr, "Error writing to buffer.\n");
+            exit(EXIT_FAILURE);
+        }
+        offset += bytesWritten;
+
         switch (nameTypeBlock[i].dataType) {
             case INT:
-                printf("%d; ", *(int32_t *) entityRecord->fields[i].data);
+                bytesWritten = snprintf(result + offset, bufferSize - offset, "%d; ", *(int32_t *)entityRecord->fields[i].data);
                 break;
             case DOUBLE:
-                printf("%f; ", *(double *) entityRecord->fields[i].data);
+                bytesWritten = snprintf(result + offset, bufferSize - offset, "%f; ", *(double *)entityRecord->fields[i].data);
                 break;
             case BOOL:
-                if (*(bool *) entityRecord->fields[i].data) {
-                    printf("true; ");
-                } else {
-                    printf("false; ");
-                }
+                bytesWritten = snprintf(result + offset, bufferSize - offset, "%s; ", (*(bool *)entityRecord->fields[i].data) ? "true" : "false");
                 break;
             default:
-                printf("%s; ", cutString((char *) entityRecord->fields[i].data, 0, entityRecord->fields[i].dataSize));
+                bytesWritten = snprintf(result + offset, bufferSize - offset, "%s; ", cutString((char *)entityRecord->fields[i].data, 0, entityRecord->fields[i].dataSize));
                 break;
         }
+
+        if (bytesWritten < 0) {
+            fprintf(stderr, "Error writing to buffer.\n");
+            exit(EXIT_FAILURE);
+        }
+        offset += bytesWritten;
     }
-    printf("\n");
+
+    result[offset] = '\0';
+
+    return result;
 }
 
 char *cutString(char *string, uint64_t start, uint64_t end) {

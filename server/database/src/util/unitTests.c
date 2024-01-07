@@ -590,7 +590,7 @@ void test9(void) {
     fclose(file);
 }
 
-// test join
+// test Join
 void test10(void) {
     FILE *file = fopen(FILE_NAME, "rb+");
     NameTypeBlock *nameTypeBlock1 = initNameTypeBlock("Name", STRING);

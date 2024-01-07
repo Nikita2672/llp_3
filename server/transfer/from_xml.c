@@ -4,6 +4,7 @@
 #include "../database/include/file/tableBlocks.h"
 #include "../database/include/file/fileApi.h"
 #include "../database/include/util/util.h"
+#include "../socket_wrapper.h"
 
 
 bool stringToBool(const char *str) {
@@ -44,7 +45,7 @@ double stringToDouble(const char *str) {
     return result;
 }
 
-char *handleInsert(xmlNodePtr root, FILE *file) {
+void *handleInsert(xmlNodePtr root, FILE *file, int client_socket) {
     xmlNodePtr insertValues, field;
     char *tableName;
     FieldValue array[MAX_FIELDS];
@@ -238,7 +239,7 @@ void printPredMass(PredMass *predMass) {
     }
 }
 
-char *handleDelete(xmlNodePtr root, FILE *file) {
+void *handleDelete(xmlNodePtr root, FILE *file, int client_socket) {
     char *tableName;
     for (xmlNodePtr node = root->children; node; node = node->next) {
         if (xmlStrEqual(node->name, BAD_CAST "tableName")) {
@@ -249,29 +250,36 @@ char *handleDelete(xmlNodePtr root, FILE *file) {
             deleteRecordFromTable(file, tableName, predMass->predicate, predMass->predicateNumber);
         }
     }
-    return "Your Record was successfully deleted";
+    send_data(client_socket, "Your entity successfully deleted");
+    send_data(client_socket, "End");
 }
 
 void doUpdateInDataBase(FILE *file, PredMass *predMass, char *updateField, char *tableName, FieldValue *newFieldValue) {
     printf("updateField: %s\n", updateField);
     printf("tableName %s\n", tableName);
     printf("dataSize %lu\n", newFieldValue->dataSize);
-    Iterator *iterator = readEntityRecordWithCondition(file, tableName, predMass->predicate, predMass->predicateNumber);
-    int fieldNumber;
-    TableOffsetBlock *tableOffsetBlock = findTableOffsetBlock(file, tableName);
-    for (int i = 0; i < tableOffsetBlock->fieldsNumber; i++) {
-        if (strcmp(tableOffsetBlock->nameTypeBlock[i].fieldName, updateField) == 0) {
-            fieldNumber = i;
-        }
-    }
-    while (hasNext(iterator, file)) {
-        EntityRecord *entityRecord = next(iterator, file);
-        entityRecord
-//        EntityRecord *newEntityRecord = malloc();
-    }
+//    Iterator *iterator = readEntityRecordWithCondition(file, tableName, predMass->predicate, predMass->predicateNumber);
+//    int fieldNumber;
+//    TableOffsetBlock *tableOffsetBlock = findTableOffsetBlock(file, tableName);
+//    for (int i = 0; i < tableOffsetBlock->fieldsNumber; i++) {
+//        if (strcmp(tableOffsetBlock->nameTypeBlock[i].fieldName, updateField) == 0) {
+//            fieldNumber = i;
+//        }
+//    }
+//    int recordsNumberUpdate = 0;
+//    while (hasNext(iterator, file)) {
+//        recordsNumberUpdate++;
+//    }
+//    EntityRecord *entityRecord = malloc(sizeof(EntityRecord) * recordsNumberUpdate);
+//
+//    Iterator *iterator1 = readEntityRecordWithCondition(file, tableName, predMass->predicate,
+//                                                        predMass->predicateNumber);
+//    while (hasNext(iterator1, file)) {
+//        entityRecord
+//    }
 }
 
-char *handleUpdate(xmlNodePtr root, FILE *file) {
+void *handleUpdate(xmlNodePtr root, FILE *file, int client_socket) {
     char *tableName;
     char *updateField;
     FieldValue *fieldValue = malloc(sizeof(FieldValue));
@@ -294,15 +302,179 @@ char *handleUpdate(xmlNodePtr root, FILE *file) {
 //            deleteRecordFromTable(file, tableName, predMass->predicate, predMass->predicateNumber);
         }
     }
-    return "Your Record was successfully updated";
-
+    send_data(client_socket, "Your entity successfully updated");
+    send_data(client_socket, "End");
 }
 
-void handleSelect(xmlNodePtr node, FILE *file) {
-
+JoinWrapper *formJoin(xmlNodePtr joinNode) {
+    JoinWrapper *joinWrapper = malloc(sizeof(JoinWrapper));
+    for (xmlNodePtr node = joinNode->children; node; node = node->next) {
+        if (xmlStrEqual(node->name, BAD_CAST "leftOperand")) {
+            for (xmlNodePtr nodeLeft = node->children; nodeLeft; nodeLeft = nodeLeft->next) {
+                if (xmlStrEqual(nodeLeft->name, BAD_CAST "leftTable")) {
+                    joinWrapper->leftTableName = (char *) xmlNodeGetContent(nodeLeft);
+                }
+                if (xmlStrEqual(nodeLeft->name, BAD_CAST "leftField")) {
+                    joinWrapper->leftFieldName = (char *) xmlNodeGetContent(nodeLeft);
+                }
+            }
+        }
+        if (xmlStrEqual(node->name, BAD_CAST "rightOperand")) {
+            for (xmlNodePtr nodeRight = node->children; nodeRight; nodeRight = nodeRight->next) {
+                if (xmlStrEqual(nodeRight->name, BAD_CAST "rightTable")) {
+                    joinWrapper->rightTableName = (char *) xmlNodeGetContent(nodeRight);
+                }
+                if (xmlStrEqual(nodeRight->name, BAD_CAST "rightField")) {
+                    joinWrapper->rightFieldName = (char *) xmlNodeGetContent(nodeRight);
+                }
+            }
+        }
+    }
+    return joinWrapper;
 }
 
-char *from_xml(char *xml, FILE *file) {
+void doSelectInDataBase(char *tableName, FILE *file, int client_socket) {
+    Iterator *iterator = readEntityRecordWithCondition(file, tableName, NULL, 0);
+    TableOffsetBlock *tableOffsetBlock = findTableOffsetBlock(file, tableName);
+    while (hasNext(iterator, file)) {
+        EntityRecord *entityRecord = next(iterator, file);
+        send_data(client_socket,
+                  printEntityRecord(entityRecord, tableOffsetBlock->fieldsNumber, tableOffsetBlock->nameTypeBlock));
+    }
+    send_data(client_socket, "End");
+}
+
+void doSelectInDataBaseWithCond(char *tableName, PredMass *predMass, FILE *file, int client_socket) {
+    Iterator *iterator = readEntityRecordWithCondition(file, tableName, predMass->predicate, predMass->predicateNumber);
+    TableOffsetBlock *tableOffsetBlock = findTableOffsetBlock(file, tableName);
+    while (hasNext(iterator, file)) {
+        EntityRecord *entityRecord = next(iterator, file);
+        send_data(client_socket,
+                  printEntityRecord(entityRecord, tableOffsetBlock->fieldsNumber, tableOffsetBlock->nameTypeBlock));
+    }
+    send_data(client_socket, "End");
+}
+
+NameTypeBlock *
+concatenateNameType(uint16_t size_1, NameTypeBlock *nameTypeBlock1, uint16_t size_2, NameTypeBlock *nameTypeBlock2) {
+    uint16_t newSize = size_1 + size_2;
+
+    NameTypeBlock *concatenatedArray = (NameTypeBlock *) malloc(newSize * sizeof(NameTypeBlock));
+    if (concatenatedArray == NULL) {
+        return NULL;
+    }
+    for (uint16_t i = 0; i < size_1; ++i) {
+        concatenatedArray[i] = nameTypeBlock1[i];
+    }
+
+    for (uint16_t i = 0; i < size_2; ++i) {
+        concatenatedArray[size_1 + i] = nameTypeBlock2[i];
+    }
+
+    return concatenatedArray;
+}
+
+void doSelectInDataBaseWithJoin(char *tableName, JoinWrapper *joinWrapper, FILE *file, int client_socket) {
+    Iterator *iterator = readEntityRecordWithCondition(file, tableName, NULL, 0);
+    int recordsNumber = 0;
+    while (hasNext(iterator, file)) recordsNumber++;
+
+    Iterator *joinIterator = readEntityRecordWithCondition(file, tableName, NULL, 0);
+    TableOffsetBlock *leftTableOffsetBlock = findTableOffsetBlock(file, tableName);
+    TableOffsetBlock *rightTableOffsetBlock = findTableOffsetBlock(file, joinWrapper->rightTableName);
+
+    int fieldNumber = 0;
+    for (int i = 0; i < leftTableOffsetBlock->fieldsNumber; i++) {
+        if (strcmp(leftTableOffsetBlock->nameTypeBlock[i].fieldName, joinWrapper->leftFieldName) == 0) {
+            fieldNumber = i;
+            break;
+        }
+    }
+
+    uint16_t fieldsNumber = leftTableOffsetBlock->fieldsNumber + rightTableOffsetBlock->fieldsNumber;
+    NameTypeBlock *newNameTypeBlock = concatenateNameType(leftTableOffsetBlock->fieldsNumber,
+                                                          leftTableOffsetBlock->nameTypeBlock,
+                                                          rightTableOffsetBlock->fieldsNumber,
+                                                          rightTableOffsetBlock->nameTypeBlock);
+    for (int i = 0; i < recordsNumber; i++) {
+        EntityRecord *entityRecord = nextWithJoin(
+                joinIterator,
+                joinWrapper->rightTableName,
+                file,
+                fieldNumber,
+                joinWrapper->rightFieldName);
+        send_data(client_socket, printEntityRecord(entityRecord, fieldsNumber, newNameTypeBlock));
+    }
+    send_data(client_socket, "End");
+}
+
+void doSelectInDataBaseWithJoinAndCond(char *tableName, JoinWrapper *joinWrapper, PredMass *predMass, FILE *file,
+                                       int client_socket) {
+    Iterator *iterator = readEntityRecordWithCondition(file, tableName, predMass->predicate, predMass->predicateNumber);
+    int recordsNumber = 0;
+    while (hasNext(iterator, file)) recordsNumber++;
+
+    Iterator *joinIterator = readEntityRecordWithCondition(file, tableName, NULL, 0);
+    TableOffsetBlock *leftTableOffsetBlock = findTableOffsetBlock(file, tableName);
+    TableOffsetBlock *rightTableOffsetBlock = findTableOffsetBlock(file, joinWrapper->rightTableName);
+
+    int fieldNumber = 0;
+    for (int i = 0; i < leftTableOffsetBlock->fieldsNumber; i++) {
+        if (strcmp(leftTableOffsetBlock->nameTypeBlock[i].fieldName, joinWrapper->leftFieldName) == 0) {
+            fieldNumber = i;
+            break;
+        }
+    }
+
+    uint16_t fieldsNumber = leftTableOffsetBlock->fieldsNumber + rightTableOffsetBlock->fieldsNumber;
+    NameTypeBlock *newNameTypeBlock = concatenateNameType(leftTableOffsetBlock->fieldsNumber,
+                                                          leftTableOffsetBlock->nameTypeBlock,
+                                                          rightTableOffsetBlock->fieldsNumber,
+                                                          rightTableOffsetBlock->nameTypeBlock);
+    for (int i = 0; i < recordsNumber; i++) {
+        EntityRecord *entityRecord = nextWithJoin(
+                joinIterator,
+                joinWrapper->rightTableName,
+                file,
+                fieldNumber,
+                joinWrapper->rightFieldName);
+        printf("%s", printEntityRecord(entityRecord, fieldsNumber, newNameTypeBlock));
+    }
+    send_data(client_socket, "End");
+}
+
+void *handleSelect(xmlNodePtr root, FILE *file, int client_socket) {
+    char *tableName;
+    bool isCond = false;
+    bool isJoin = false;
+    PredMass *predMass = malloc(sizeof(PredMass));
+    JoinWrapper *joinWrapper = malloc(sizeof(JoinWrapper));
+    for (xmlNodePtr node = root->children; node; node = node->next) {
+        if (xmlStrEqual(node->name, BAD_CAST "tableName")) {
+            tableName = (char *) xmlNodeGetContent(node);
+        }
+        if (xmlStrEqual(node->name, BAD_CAST "filter")) {
+            isCond = true;
+            predMass = goDepth(node->children[0].next);
+            printPredMass(predMass);
+        }
+        if (xmlStrEqual(node->name, BAD_CAST "join")) {
+            isJoin = true;
+            joinWrapper = formJoin(node);
+        }
+    }
+    if (isCond && isJoin) {
+        doSelectInDataBaseWithJoinAndCond(tableName, joinWrapper, predMass, file, client_socket);
+    } else if (isCond) {
+        doSelectInDataBaseWithCond(tableName, predMass, file, client_socket);
+    } else if (isJoin) {
+        doSelectInDataBaseWithJoin(tableName, joinWrapper, file, client_socket);
+    } else {
+        doSelectInDataBase(tableName, file, client_socket);
+    }
+}
+
+void *from_xml(char *xml, FILE *file, int client_socket) {
     xmlDocPtr doc;
     xmlNodePtr root, node;
 
@@ -324,19 +496,21 @@ char *from_xml(char *xml, FILE *file) {
         return "Empty document.\n";
     }
 
-    // Перебор элементов
     for (node = root->children; node; node = node->next) {
         if (node->type == XML_ELEMENT_NODE) {
             if (xmlStrEqual(node->name, BAD_CAST "requestType")) {
-                if (strcmp(xmlNodeGetContent(node), "INSERT_QUERY") == 0) return handleInsert(root, file);
-                else if (strcmp(xmlNodeGetContent(node), "UPDATE_QUERY") == 0) return handleUpdate(root, file);
-                else if (strcmp(xmlNodeGetContent(node), "DELETE_QUERY") == 0) return handleDelete(root, file);
-                else if (strcmp(xmlNodeGetContent(node), "SELECT_QUERY") == 0) handleSelect(root, file);
+                if (strcmp(xmlNodeGetContent(node), "INSERT_QUERY") == 0)
+                    return handleInsert(root, file, client_socket);
+                else if (strcmp(xmlNodeGetContent(node), "UPDATE_QUERY") == 0)
+                    return handleUpdate(root, file, client_socket);
+                else if (strcmp(xmlNodeGetContent(node), "DELETE_QUERY") == 0)
+                    return handleDelete(root, file, client_socket);
+                else if (strcmp(xmlNodeGetContent(node), "SELECT_QUERY") == 0)
+                    return handleSelect(root, file, client_socket);
             }
         }
     }
 
-    // Освобождение ресурсов
     xmlFreeDoc(doc);
     xmlCleanupParser();
 }

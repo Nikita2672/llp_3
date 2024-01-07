@@ -6,12 +6,19 @@
 #include "stdio.h"
 #include "../database/include/query/query.h"
 
-char *from_xml(char *xml, FILE *file);
+void *from_xml(char *xml, FILE *file, int client_socket);
 
 typedef struct {
     uint8_t predicateNumber;
     Predicate *predicate;
 } PredMass;
+
+typedef struct {
+    char *leftTableName;
+    char *rightTableName;
+    char *leftFieldName;
+    char *rightFieldName;
+} JoinWrapper;
 
 PredMass *parseCondition(xmlNodePtr condition);
 
