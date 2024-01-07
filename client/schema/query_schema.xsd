@@ -1,5 +1,5 @@
 <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
-    <xs:element name="Query">
+    <xs:element name="Root">
         <xs:complexType>
             <xs:sequence>
                 <xs:element name="requestType">
@@ -16,7 +16,7 @@
                 <xs:choice>
                     <xs:sequence>
                         <!-- If requestType is DELETE or SELECT -->
-                        <xs:element name="filters" minOccurs="0">
+                        <xs:element name="filter" minOccurs="0">
                             <xs:complexType>
                                 <xs:sequence>
                                     <xs:element name="filter" maxOccurs="unbounded">

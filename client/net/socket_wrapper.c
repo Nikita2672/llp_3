@@ -6,13 +6,13 @@ int create_server_socket() {
     return socket(AF_INET, SOCK_STREAM, 0);
 }
 
-int create_client_socket(const char *server_ip) {
+int create_client_socket(const char *server_ip, int server_port) {
     int client_socket = socket(AF_INET, SOCK_STREAM, 0);
 
     struct sockaddr_in server_addr;
     memset(&server_addr, 0, sizeof(server_addr));
     server_addr.sin_family = AF_INET;
-    server_addr.sin_port = htons(SERVER_PORT);
+    server_addr.sin_port = htons(server_port);
     inet_pton(AF_INET, server_ip, &(server_addr.sin_addr));
 
     connect(client_socket, (struct sockaddr *) &server_addr, sizeof(server_addr));
@@ -20,12 +20,12 @@ int create_client_socket(const char *server_ip) {
     return client_socket;
 }
 
-void bind_socket(int socket_fd) {
+void bind_socket(int socket_fd, int server_port) {
     struct sockaddr_in server_addr;
     memset(&server_addr, 0, sizeof(server_addr));
     server_addr.sin_family = AF_INET;
     server_addr.sin_addr.s_addr = INADDR_ANY;
-    server_addr.sin_port = htons(SERVER_PORT);
+    server_addr.sin_port = htons(server_port);
 
     bind(socket_fd, (struct sockaddr *) &server_addr, sizeof(server_addr));
 }
@@ -38,11 +38,11 @@ int accept_connection(int socket_fd) {
     return accept(socket_fd, NULL, NULL);
 }
 
-void connect_to_server(int socket_fd, const char *server_ip) {
+void connect_to_server(int socket_fd, const char *server_ip, int server_port) {
     struct sockaddr_in server_addr;
     memset(&server_addr, 0, sizeof(server_addr));
     server_addr.sin_family = AF_INET;
-    server_addr.sin_port = htons(SERVER_PORT);
+    server_addr.sin_port = htons(server_port);
     inet_pton(AF_INET, server_ip, &(server_addr.sin_addr));
 
     connect(socket_fd, (struct sockaddr *) &server_addr, sizeof(server_addr));
@@ -106,16 +106,13 @@ char *parseResponse(char *buffer) {
 void receive_data(int socket_fd, char *buffer) {
     memset(buffer, 0, MAX_BUFFER_SIZE);
     recv(socket_fd, buffer, MAX_BUFFER_SIZE, 0);
-//    printf("\n\n\n\nBuffer contains: %s\n\n\n\n", buffer);
     char *message = parseResponse(buffer);
     while (trimmed_strcmp(message, "End") != 0) {
         printf("%s\n", message);
         memset(buffer, 0, MAX_BUFFER_SIZE);
         recv(socket_fd, buffer, MAX_BUFFER_SIZE, 0);
-//        printf("\n\n\n\nBuffer contains: %s\n\n\n\n", buffer);
         message = parseResponse(buffer);
     }
-//    printf("%s\n", message);
 }
 
 void close_socket(int socket_fd) {

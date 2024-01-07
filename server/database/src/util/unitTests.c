@@ -17,8 +17,7 @@ assertEqualsString(const char *found, const char *expected, char *fieldName, uin
                testNumber, position, fieldName, expected, found);
 }
 
-void test1(void) {
-    FILE *file = fopen(FILE_NAME, "rb+");
+void test1(FILE * file) {
     writeEmptyTablesBlock(file);
     assertEquals(readEmptySpaceOffset(file), sizeof(DefineTablesBlock) + BLOCK_SPACE, "EmptySpaceOffset", 1, 1);
     assertEquals(readTablesCount(file), 1, "table count", 1, 2);
@@ -26,11 +25,9 @@ void test1(void) {
     assertEquals(readEmptySpaceOffset(file), sizeof(DefineTablesBlock) + BLOCK_SPACE, "EmptySpaceOffset", 1, 3);
     assertEquals(readTablesCount(file), 3, "table count", 1, 4);
     assertEquals(readTablesCount(file), 3, "table count", 1, 6);
-    fclose(file);
 }
 
-void test2(void) {
-    FILE *file = fopen(FILE_NAME, "rb+");
+void test2(FILE* file) {
     NameTypeBlock *nameTypeBlock1 = initNameTypeBlock("Name", STRING);
     NameTypeBlock *nameTypeBlock2 = initNameTypeBlock("Surname", STRING);
     NameTypeBlock *nameTypeBlock3 = initNameTypeBlock("Age", INT);
@@ -99,11 +96,9 @@ void test2(void) {
     free(tableOffsetBlock2);
     free(tableOffsetBlock3);
 
-    fclose(file);
 }
 
-void test3(void) {
-    FILE *file = fopen(FILE_NAME_1, "rb+");
+void test3(FILE* file) {
 
     // test read write 1 record
     HeaderSection headerSection = {0, 0, BLOCK_DATA_SIZE, 0};
@@ -168,7 +163,6 @@ void test3(void) {
     assertEquals(headerSection1.pageNumber, 0, "pageNUmber", 3, 26);
     assertEquals(headerSection1.endEmptySpaceOffset, BLOCK_DATA_SIZE - sizeof(RecordId) * 2,
                  "endEmptySpaceOffset", 3, 27);
-    fclose(file);
 }
 
 // test checkPredicate function
@@ -227,8 +221,7 @@ void test4(void) {
 }
 
 //check Iterator
-void test5(void) {
-    FILE *file = fopen(FILE_NAME, "rb+");
+void test5(FILE* file) {
     double score = 123.3;
     char *name = "Ksenia";
     char *surname = "Kirillova";
@@ -342,7 +335,6 @@ void test5(void) {
 
     bool isNext6 = hasNext(iterator, file);
     assertEquals(isNext6, false, "hasNext", 5, 1);
-    fclose(file);
 }
 
 //check Iterator with predicates
@@ -519,11 +511,11 @@ void test7(void) {
 }
 
 void test8(void) {
-    test1();
-    test2();
-    test5();
-    test6();
     FILE *file = fopen(FILE_NAME, "rb+");
+    test1(file);
+    test2(file);
+    test5(file);
+    test6();
     printf("\n");
     double score = 124.4;
     bool sex = false;
@@ -550,11 +542,11 @@ void test8(void) {
 
 // test update
 void test9(void) {
-    test1();
-    test2();
-    test5();
-    test6();
     FILE *file = fopen(FILE_NAME, "rb+");
+    test1(file);
+    test2(file);
+    test5(file);
+    test6();
     double score = 128;
     FieldValue fieldValue = {&score, sizeof(score)};
     Predicate predicate[1] = {{&fieldValue, "Score", EQUALS}};
@@ -591,8 +583,7 @@ void test9(void) {
 }
 
 // test Join
-void test10(void) {
-    FILE *file = fopen(FILE_NAME, "rb+");
+void test10(FILE* file) {
     NameTypeBlock *nameTypeBlock1 = initNameTypeBlock("Name", STRING);
     NameTypeBlock *nameTypeBlock2 = initNameTypeBlock("Surname", STRING);
     NameTypeBlock *nameTypeBlock3 = initNameTypeBlock("Age", INT);
@@ -729,7 +720,6 @@ void test10(void) {
                        "Name", 10, 19);
     assertEqualsString(cutString((char *) entityRecord->fields[6].data, 0, entityRecord->fields[6].dataSize),
                        "Command develop backoffice module", "Description", 10, 20);
-    fclose(file);
 }
 
 // check memory in file

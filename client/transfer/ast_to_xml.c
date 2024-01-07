@@ -1,7 +1,56 @@
 #include "ast_to_xml.h"
 #include <libxml/parser.h>
 #include <libxml/tree.h>
+#include <libxml/xmlschemas.h>
 
+int validateXmlAgainstSchemaFile(const char *xmlString, const char *schemaFilePath) {
+    LIBXML_TEST_VERSION
+
+    // Создание XML-документа из строки
+    xmlDocPtr doc = xmlReadMemory(xmlString, strlen(xmlString), "noname.xml", NULL, 0);
+    if (doc == NULL) {
+        fprintf(stderr, "Failed to parse the input XML.\n");
+        return -1; // Ошибка при парсинге XML
+    }
+
+    // Создание XML-схемы из файла
+    xmlSchemaParserCtxtPtr parserCtxt = xmlSchemaNewParserCtxt(schemaFilePath);
+    if (parserCtxt == NULL) {
+        fprintf(stderr, "Failed to parse the input XML schema.\n");
+        xmlFreeDoc(doc);
+        return -2; // Ошибка при парсинге XML схемы
+    }
+
+    xmlSchemaPtr schema = xmlSchemaParse(parserCtxt);
+    if (schema == NULL) {
+        fprintf(stderr, "Failed to parse the input XML schema.\n");
+        xmlSchemaFreeParserCtxt(parserCtxt);
+        xmlFreeDoc(doc);
+        return -2; // Ошибка при парсинге XML схемы
+    }
+
+    // Создание контекста валидации
+    xmlSchemaValidCtxtPtr validCtxt = xmlSchemaNewValidCtxt(schema);
+    if (validCtxt == NULL) {
+        fprintf(stderr, "Failed to create a validation context.\n");
+        xmlSchemaFree(schema);
+        xmlSchemaFreeParserCtxt(parserCtxt);
+        xmlFreeDoc(doc);
+        return -3; // Ошибка при создании контекста валидации
+    }
+
+    // Валидация XML по схеме
+    int isValid = xmlSchemaValidateDoc(validCtxt, doc);
+
+    // Освобождение ресурсов
+    xmlSchemaFreeValidCtxt(validCtxt);
+    xmlSchemaFree(schema);
+    xmlSchemaFreeParserCtxt(parserCtxt);
+    xmlFreeDoc(doc);
+    xmlCleanupParser();
+
+    return isValid; // Возвращаем 0, если XML соответствует схеме, и отрицательное число в противном случае
+}
 
 char *doubleToStr(double doubleValue) {
     int bufferSize = snprintf(NULL, 0, "%lf", doubleValue);

@@ -7,7 +7,7 @@ find_package(LibXml2 REQUIRED)
 include_directories(${LIBXML2_INCLUDE_DIR})
 
 add_executable(server
-        socket_wrapper.c
+        net/socket_wrapper.c
         database/src/data/comparator.c
         database/src/file/allocator.c
         database/src/file/fileApi.c

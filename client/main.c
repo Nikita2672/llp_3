@@ -5,15 +5,22 @@
 #include <stdio.h>
 
 
-int main() {
-    const char *server_ip = "127.0.0.1";
-    int client_socket = create_client_socket(server_ip);
+int main(int argc, char *argv[]) {
+    if (argc != 3) {
+        fprintf(stderr, "Использование: %s <server_ip> <server_port>\n", argv[0]);
+        return 1;
+    }
+
+    const char *server_ip = argv[1];
+    int server_port = atoi(argv[2]);
+
+    int client_socket = create_client_socket(server_ip, server_port);
 
     char buffer[MAX_BUFFER_SIZE];
 
     int times = 5;
     while (times) {
-//        times--;
+        times--;
         printf("Enter a message to send to the server: ");
         input();
         char * xml = to_xml();

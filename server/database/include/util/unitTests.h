@@ -19,15 +19,15 @@
 #define FILE_NAME_2 "/home/iwaa0303/CLionProjects/llp_3/server/database/test/data.bin"
 #endif
 
-void test1(void);
+void test1(FILE* file);
 
-void test2(void);
+void test2(FILE* file);
 
-void test3(void);
+void test3(FILE* file);
 
 void test4(void);
 
-void test5(void);
+void test5(FILE* file);
 
 void test6(void);
 
@@ -37,7 +37,7 @@ void test8(void);
 
 void test9(void);
 
-void test10(void);
+void test10(FILE* file);
 
 void test11(void);
 

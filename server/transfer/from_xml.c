@@ -4,7 +4,7 @@
 #include "../database/include/file/tableBlocks.h"
 #include "../database/include/file/fileApi.h"
 #include "../database/include/util/util.h"
-#include "../socket_wrapper.h"
+#include "../net/socket_wrapper.h"
 
 int validateXmlAgainstSchemaFile(const char *xmlString, const char *schemaFilePath) {
     LIBXML_TEST_VERSION
@@ -315,7 +315,6 @@ void *handleDelete(xmlNodePtr root, FILE *file, int client_socket) {
             tableName = (char *) xmlNodeGetContent(node);
         } else if (xmlStrEqual(node->name, BAD_CAST "filter")) {
             PredMass *predMass = goDepth(node->children[0].next);
-            printPredMass(predMass);
             deleteRecordFromTable(file, tableName, predMass->predicate, predMass->predicateNumber);
         }
     }

@@ -1,4 +1,4 @@
-#include "socket_wrapper.h"
+#include "net/socket_wrapper.h"
 #include "transfer/from_xml.h"
 #include "database/include/file/tableBlocks.h"
 #include "database/include/util/unitTests.h"
@@ -19,37 +19,47 @@ char *selectWithJoinAndCond();
 
 xmlNodePtr getCond();
 
-int main() {
-    test1();
-    test2();
-    test5();
-    test10();
-    FILE *file = fopen("/home/iwaa0303/CLionProjects/llp_3/server/database/test/file.bin", "rb+");
 
-
-    int server_socket = create_server_socket();
-    bind_socket(server_socket);
-    listen_for_connections(server_socket);
-
-    printf("Server waiting for connections...\n");
-
-    int client_socket = accept_connection(server_socket);
-    printf("Connection established with client.\n");
-
-    int times = 10;
-    while (times) {
+void preparing(FILE* file) {
+    test1(file);
+    test2(file);
+    test5(file);
+    test10(file);
+}
+int main(int argc, char *argv[]) {
+    printf("%d", validateXmlAgainstSchemaFile(selectWithJoinAndCond(), "/home/iwaa0303/CLionProjects/llp_3/server/schema/query_schema.xsd"));
+//    if (argc != 3) {
+//        fprintf(stderr, "Использование: %s <server_ip> <server_port>\n", argv[0]);
+//        return 1;
+//    }
+//    const char *filePath = argv[1];
+//    int server_port = atoi(argv[2]);
+//    FILE *file = fopen(filePath, "rb+");
+//
+//
+//    int server_socket = create_server_socket();
+//    bind_socket(server_socket, server_port);
+//    listen_for_connections(server_socket);
+//
+//    printf("Server waiting for connections...\n");
+//
+//    int client_socket = accept_connection(server_socket);
+//    printf("Connection established with client.\n");
+//
+//    int times = 10;
+//    while (times) {
 //        times--;
-        char buffer[MAX_BUFFER_SIZE];
-        receive_data(client_socket, buffer);
-
-        printf("Received from client: %s\n", buffer);
-
-        char *xml = buffer;
-        from_xml(xml, file, client_socket);
-    }
-
-    close_socket(client_socket);
-    close_socket(server_socket);
+//        char buffer[MAX_BUFFER_SIZE];
+//        receive_data(client_socket, buffer);
+//
+//        printf("Received from client: %s\n", buffer);
+//
+//        char *xml = buffer;
+//        from_xml(xml, file, client_socket);
+//    }
+//
+//    close_socket(client_socket);
+//    close_socket(server_socket);
 
     return 0;
 }

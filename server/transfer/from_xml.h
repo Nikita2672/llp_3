@@ -27,4 +27,5 @@ PredMass *parseCondition(xmlNodePtr condition);
 
 xmlNodePtr traverseChildren(xmlNodePtr node, int childNumber);
 
+int validateXmlAgainstSchemaFile(const char *xmlString, const char *schemaFilePath);
 #endif //SERVER_FROM_XML_H
