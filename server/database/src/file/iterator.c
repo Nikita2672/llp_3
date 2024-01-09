@@ -8,14 +8,13 @@
 #include <memory.h>
 #include "../../include/util/util.h"
 
-
 bool hasNext(Iterator *iterator, FILE *file) {
     HeaderSection headerSection;
     fseek(file, iterator->blockOffset, SEEK_SET);
     fread(&headerSection, sizeof(HeaderSection), 1, file);
     SpecialDataSection specialDataSection;
     fseek(file, BLOCK_DATA_SIZE, SEEK_CUR);
-    fread(&specialDataSection, sizeof (specialDataSection), 1, file);
+    fread(&specialDataSection, sizeof(specialDataSection), 1, file);
     bool hasNextVariable = false;
     for (uint16_t i = iterator->currentPositionInBlock; i < headerSection.recordsNumber; i++) {
         EntityRecord *entityRecord = readRecord(file, i, iterator->blockOffset, iterator->fieldsNumber);
@@ -64,6 +63,68 @@ static EntityRecord *concatenateEntityRecords(EntityRecord *entityRecord1,
 
 EntityRecord *nextWithJoin(Iterator *iterator1, const char *tableName,
                            FILE *file, uint8_t fieldNumber, char *fieldName) {
+    EntityRecord *entityRecord1 = next(iterator1, file);;
+//    if (hasNext(iterator1, file)) {
+//        entityRecord1 =
+//    } else {
+//        return NULL;
+//    }
+    FieldValue fieldValue = entityRecord1->fields[fieldNumber];
+    Predicate predicate = {&fieldValue, fieldName, EQUALS};
+    Iterator *iterator2 = readEntityRecordWithCondition(file, tableName, &predicate, 1);
+    EntityRecord *entityRecord2 = malloc(sizeof (EntityRecord));
+
+
+    NameTypeBlock *nameTypeBlock1 = initNameTypeBlock("Id", INT);
+    NameTypeBlock *nameTypeBlock2 = initNameTypeBlock("Name", STRING);
+
+    NameTypeBlock *nameTypeBlock21 = initNameTypeBlock("AuthorId", INT);
+    NameTypeBlock *nameTypeBlock22 = initNameTypeBlock("RecipeIdentity", INT);
+    NameTypeBlock *nameTypeBlock23 = initNameTypeBlock("Name", STRING);
+    NameTypeBlock *nameTypeBlock24 = initNameTypeBlock("PreparationTime", INT);
+    NameTypeBlock *nameTypeBlock25 = initNameTypeBlock("Description", STRING);
+    NameTypeBlock *nameTypeBlock26 = initNameTypeBlock("RecipeId", INT);
+    NameTypeBlock *nameTypeBlock27 = initNameTypeBlock("SkillLevel", STRING);
+    NameTypeBlock *nameTypeBlock28 = initNameTypeBlock("CookingTime", INT);
+    NameTypeBlock *nameTypeBlock29 = initNameTypeBlock("ElementId", INT);
+
+    NameTypeBlock nameTypeBlocks1[2] = {
+            *nameTypeBlock1,
+            *nameTypeBlock2
+    };
+
+    NameTypeBlock nameTypeBlocks[11] = {
+            *nameTypeBlock21,
+            *nameTypeBlock22,
+            *nameTypeBlock23,
+            *nameTypeBlock24,
+            *nameTypeBlock25,
+            *nameTypeBlock26,
+            *nameTypeBlock27,
+            *nameTypeBlock28,
+            *nameTypeBlock29,
+            *nameTypeBlock1,
+            *nameTypeBlock2,
+    };
+
+    if (hasNext(iterator2, file)) {
+        entityRecord2 = next(iterator2, file);
+//        printf("SEARCH: %s\n", printEntityRecord(entityRecord2, 2, nameTypeBlocks1));
+        EntityRecord *entityRecord = concatenateEntityRecords(entityRecord1, entityRecord2,
+                                                              iterator1->fieldsNumber,
+                                                              iterator2->fieldsNumber);
+        printf("FOUND: %s\n", printEntityRecord(entityRecord, 11, nameTypeBlocks));
+        return entityRecord;
+    }
+    EntityRecord *entityRecord = concatenateEntityRecords(entityRecord1, entityRecord2,
+                                                          iterator1->fieldsNumber,
+                                                          iterator2->fieldsNumber);
+    return entityRecord;
+}
+
+struct EntityMass *nextWithMulJoin(Iterator *iterator1, const char *tableName,
+                                   FILE *file, uint8_t fieldNumber, char *fieldName,
+                                   Predicate *predicate2, int32_t predicateNumber) {
     EntityRecord *entityRecord1 = NULL;
     if (hasNext(iterator1, file)) {
         entityRecord1 = next(iterator1, file);
@@ -73,17 +134,28 @@ EntityRecord *nextWithJoin(Iterator *iterator1, const char *tableName,
     FieldValue fieldValue = entityRecord1->fields[fieldNumber];
     Predicate predicate = {&fieldValue, fieldName, EQUALS};
     Iterator *iterator2 = readEntityRecordWithCondition(file, tableName, &predicate, 1);
-    EntityRecord *entityRecord2 = NULL;
-    if (hasNext(iterator2, file)) {
-        entityRecord2 = next(iterator2, file);
+    int32_t counter = 0;
+    while (hasNext(iterator2, file)) {
+        counter++;
     }
-    EntityRecord *entityRecord = concatenateEntityRecords(entityRecord1, entityRecord2,
-                                                          iterator1->fieldsNumber,
-                                                          iterator2->fieldsNumber);
-    return entityRecord;
+    EntityRecord **entityArray = malloc(sizeof(EntityRecord) * counter);
+    Iterator *iterator3 = readEntityRecordWithCondition(file, tableName, &predicate, 1);
+    int32_t position = 0;
+    while (hasNext(iterator3, file)) {
+        EntityRecord *entityRecord2 = next(iterator3, file);
+        EntityRecord *entityRecord = concatenateEntityRecords(entityRecord1, entityRecord2,
+                                                              iterator1->fieldsNumber,
+                                                              iterator2->fieldsNumber);
+        entityArray[position] = entityRecord;
+        position++;
+    }
+    struct EntityMass *entityMass = malloc(sizeof(struct EntityMass));
+    entityMass->massEntityRecords = entityArray;
+    entityMass->numberRecords = counter;
+    return entityMass;
 }
 
-void freeIterator(Iterator* iterator) {
+void freeIterator(Iterator *iterator) {
     free(iterator->nameTypeBlock);
     free(iterator);
 }

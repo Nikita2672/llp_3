@@ -15,6 +15,6 @@ void yyerror(const char *s) {
 
 int input() {
     yyparse();
-//    printAstTree();
+    printAstTree();
     return 0;
 }

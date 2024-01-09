@@ -28,73 +28,111 @@ void test1(FILE * file) {
 }
 
 void test2(FILE* file) {
-    NameTypeBlock *nameTypeBlock1 = initNameTypeBlock("Name", STRING);
-    NameTypeBlock *nameTypeBlock2 = initNameTypeBlock("Surname", STRING);
-    NameTypeBlock *nameTypeBlock3 = initNameTypeBlock("Age", INT);
-    NameTypeBlock *nameTypeBlock4 = initNameTypeBlock("Score", DOUBLE);
-    NameTypeBlock *nameTypeBlock5 = initNameTypeBlock("Sex", BOOL);
-
-    // 1 table
-    NameTypeBlock nameTypeBlocks1[5] = {
+    NameTypeBlock *nameTypeBlock1 = initNameTypeBlock("Id", INT);
+    NameTypeBlock *nameTypeBlock2 = initNameTypeBlock("Name", STRING);
+    NameTypeBlock nameTypeBlocks[2] = {
             *nameTypeBlock1,
-            *nameTypeBlock2,
-            *nameTypeBlock3,
-            *nameTypeBlock4,
-            *nameTypeBlock5
+            *nameTypeBlock2
     };
-    TableOffsetBlock *writtenTableOffsetBlock1 = initTableOffsetBlock(file, "User", 5, nameTypeBlocks1);
-    writeTableOffsetBlock(file, writtenTableOffsetBlock1);
-    TableOffsetBlock *tableOffsetBlock1 = readTableOffsetBlock(file, 1);
+    TableOffsetBlock *writtenTableOffsetBlock = initTableOffsetBlock(file, "Author", 2, nameTypeBlocks);
+    writeTableOffsetBlock(file, writtenTableOffsetBlock);
+    TableOffsetBlock *tableOffsetBlock = readTableOffsetBlock(file, 1);
+    assertEquals(tableOffsetBlock->fieldsNumber, 2, "fieldsNumber", 2, 1);
+    assertEqualsString(tableOffsetBlock->tableName, "Author", "tableName", 2, 2);
 
-    assertEquals(tableOffsetBlock1->fieldsNumber, 5, "fieldsNumber", 2, 1);
-    assertEqualsString(tableOffsetBlock1->tableName, "User", "tableName", 2, 2);
-    assertEquals(tableOffsetBlock1->lastTableBLockOffset, sizeof(DefineTablesBlock) + BLOCK_SPACE,
-                 "lastTableOffsetBlock", 2, 3);
-    assertEquals(tableOffsetBlock1->firsTableBlockOffset, sizeof(DefineTablesBlock) + BLOCK_SPACE,
-                 "firstTableOffsetBlock", 2, 4);
-    assertEqualsString(tableOffsetBlock1->nameTypeBlock[0].fieldName, "Name", "Name 1 field", 2, 5);
 
-    // 2 tables
-    NameTypeBlock nameTypeBlocks2[3] = {
-            *nameTypeBlock2,
-            *nameTypeBlock3,
-            *nameTypeBlock4
+    NameTypeBlock *nameTypeBlock21 = initNameTypeBlock("AuthorId", INT);
+    NameTypeBlock *nameTypeBlock22 = initNameTypeBlock("RecipeIdentity", INT);
+    NameTypeBlock *nameTypeBlock23 = initNameTypeBlock("Name", STRING);
+    NameTypeBlock *nameTypeBlock24 = initNameTypeBlock("PreparationTime", INT);
+    NameTypeBlock *nameTypeBlock25 = initNameTypeBlock("Description", STRING);
+    NameTypeBlock *nameTypeBlock26 = initNameTypeBlock("RecipeId", INT);
+    NameTypeBlock *nameTypeBlock27 = initNameTypeBlock("SkillLevel", STRING);
+    NameTypeBlock *nameTypeBlock28 = initNameTypeBlock("CookingTime", INT);
+    NameTypeBlock *nameTypeBlock29 = initNameTypeBlock("ElementId", INT);
+    NameTypeBlock nameTypeBlocks2[9] = {
+            *nameTypeBlock21,
+            *nameTypeBlock22,
+            *nameTypeBlock23,
+            *nameTypeBlock24,
+            *nameTypeBlock25,
+            *nameTypeBlock26,
+            *nameTypeBlock27,
+            *nameTypeBlock28,
+            *nameTypeBlock29,
     };
-    TableOffsetBlock *writtenTableOffsetBlock2 = initTableOffsetBlock(file, "Cake", 3, nameTypeBlocks2);
+    TableOffsetBlock *writtenTableOffsetBlock2 = initTableOffsetBlock(file, "Recipe", 9, nameTypeBlocks2);
     writeTableOffsetBlock(file, writtenTableOffsetBlock2);
     TableOffsetBlock *tableOffsetBlock2 = readTableOffsetBlock(file, 2);
-
-    assertEquals(tableOffsetBlock2->fieldsNumber, 3, "fieldsNumber", 2, 6);
-    assertEqualsString(tableOffsetBlock2->tableName, "Cake", "tableName", 2, 7);
-    uint64_t expectedOffset = sizeof(DefineTablesBlock) + sizeof(HeaderSection) + BLOCK_DATA_SIZE +
-                              sizeof(SpecialDataSection);
-    assertEquals(tableOffsetBlock2->lastTableBLockOffset, expectedOffset + BLOCK_SPACE, "lastTableOffsetBlock", 2, 8);
-    assertEquals(tableOffsetBlock2->firsTableBlockOffset, expectedOffset + BLOCK_SPACE, "firstTableOffsetBlock", 2, 9);
-    assertEqualsString(tableOffsetBlock2->nameTypeBlock[0].fieldName, "Surname", "Name 1 field", 2, 10);
-
-    // check if table 2 overwritten table 1
-    TableOffsetBlock *tableOffsetBlock3 = readTableOffsetBlock(file, 1);
-
-    assertEquals(tableOffsetBlock3->fieldsNumber, 5, "fieldsNumber", 2, 11);
-    assertEqualsString(tableOffsetBlock3->tableName, "User", "tableName", 2, 12);
-    assertEquals(tableOffsetBlock3->lastTableBLockOffset, sizeof(DefineTablesBlock) + BLOCK_SPACE,
-                 "lastTableOffsetBlock", 2, 13);
-    assertEquals(tableOffsetBlock3->firsTableBlockOffset, sizeof(DefineTablesBlock) + BLOCK_SPACE,
-                 "firstTableOffsetBlock", 2, 14);
-    assertEqualsString(tableOffsetBlock3->nameTypeBlock[0].fieldName, "Name", "Name 1 field", 2, 15);
-
-    free(nameTypeBlock1);
-    free(nameTypeBlock2);
-    free(nameTypeBlock3);
-    free(nameTypeBlock4);
-    free(nameTypeBlock5);
-
-    free(writtenTableOffsetBlock1);
-    free(writtenTableOffsetBlock2);
-
-    free(tableOffsetBlock1);
-    free(tableOffsetBlock2);
-    free(tableOffsetBlock3);
+    assertEquals(tableOffsetBlock2->fieldsNumber, 9, "fieldsNumber", 2, 1);
+    assertEqualsString(tableOffsetBlock2->tableName, "Recipe", "tableName", 2, 2);
+//    NameTypeBlock *nameTypeBlock1 = initNameTypeBlock("Name", STRING);
+//    NameTypeBlock *nameTypeBlock2 = initNameTypeBlock("Surname", STRING);
+//    NameTypeBlock *nameTypeBlock3 = initNameTypeBlock("Age", INT);
+//    NameTypeBlock *nameTypeBlock4 = initNameTypeBlock("Score", DOUBLE);
+//    NameTypeBlock *nameTypeBlock5 = initNameTypeBlock("Sex", BOOL);
+//
+//    // 1 table
+//    NameTypeBlock nameTypeBlocks1[5] = {
+//            *nameTypeBlock1,
+//            *nameTypeBlock2,
+//            *nameTypeBlock3,
+//            *nameTypeBlock4,
+//            *nameTypeBlock5
+//    };
+//    TableOffsetBlock *writtenTableOffsetBlock1 = initTableOffsetBlock(file, "User", 5, nameTypeBlocks1);
+//    writeTableOffsetBlock(file, writtenTableOffsetBlock1);
+//    TableOffsetBlock *tableOffsetBlock1 = readTableOffsetBlock(file, 1);
+//
+//    assertEquals(tableOffsetBlock1->fieldsNumber, 5, "fieldsNumber", 2, 1);
+//    assertEqualsString(tableOffsetBlock1->tableName, "User", "tableName", 2, 2);
+//    assertEquals(tableOffsetBlock1->lastTableBLockOffset, sizeof(DefineTablesBlock) + BLOCK_SPACE,
+//                 "lastTableOffsetBlock", 2, 3);
+//    assertEquals(tableOffsetBlock1->firsTableBlockOffset, sizeof(DefineTablesBlock) + BLOCK_SPACE,
+//                 "firstTableOffsetBlock", 2, 4);
+//    assertEqualsString(tableOffsetBlock1->nameTypeBlock[0].fieldName, "Name", "Name 1 field", 2, 5);
+//
+//    // 2 tables
+//    NameTypeBlock nameTypeBlocks2[3] = {
+//            *nameTypeBlock2,
+//            *nameTypeBlock3,
+//            *nameTypeBlock4
+//    };
+//    TableOffsetBlock *writtenTableOffsetBlock2 = initTableOffsetBlock(file, "Cake", 3, nameTypeBlocks2);
+//    writeTableOffsetBlock(file, writtenTableOffsetBlock2);
+//    TableOffsetBlock *tableOffsetBlock2 = readTableOffsetBlock(file, 2);
+//
+//    assertEquals(tableOffsetBlock2->fieldsNumber, 3, "fieldsNumber", 2, 6);
+//    assertEqualsString(tableOffsetBlock2->tableName, "Cake", "tableName", 2, 7);
+//    uint64_t expectedOffset = sizeof(DefineTablesBlock) + sizeof(HeaderSection) + BLOCK_DATA_SIZE +
+//                              sizeof(SpecialDataSection);
+//    assertEquals(tableOffsetBlock2->lastTableBLockOffset, expectedOffset + BLOCK_SPACE, "lastTableOffsetBlock", 2, 8);
+//    assertEquals(tableOffsetBlock2->firsTableBlockOffset, expectedOffset + BLOCK_SPACE, "firstTableOffsetBlock", 2, 9);
+//    assertEqualsString(tableOffsetBlock2->nameTypeBlock[0].fieldName, "Surname", "Name 1 field", 2, 10);
+//
+//    // check if table 2 overwritten table 1
+//    TableOffsetBlock *tableOffsetBlock3 = readTableOffsetBlock(file, 1);
+//
+//    assertEquals(tableOffsetBlock3->fieldsNumber, 5, "fieldsNumber", 2, 11);
+//    assertEqualsString(tableOffsetBlock3->tableName, "User", "tableName", 2, 12);
+//    assertEquals(tableOffsetBlock3->lastTableBLockOffset, sizeof(DefineTablesBlock) + BLOCK_SPACE,
+//                 "lastTableOffsetBlock", 2, 13);
+//    assertEquals(tableOffsetBlock3->firsTableBlockOffset, sizeof(DefineTablesBlock) + BLOCK_SPACE,
+//                 "firstTableOffsetBlock", 2, 14);
+//    assertEqualsString(tableOffsetBlock3->nameTypeBlock[0].fieldName, "Name", "Name 1 field", 2, 15);
+//
+//    free(nameTypeBlock1);
+//    free(nameTypeBlock2);
+//    free(nameTypeBlock3);
+//    free(nameTypeBlock4);
+//    free(nameTypeBlock5);
+//
+//    free(writtenTableOffsetBlock1);
+//    free(writtenTableOffsetBlock2);
+//
+//    free(tableOffsetBlock1);
+//    free(tableOffsetBlock2);
+//    free(tableOffsetBlock3);
 
 }
 

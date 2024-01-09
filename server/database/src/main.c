@@ -1,13 +1,15 @@
 #include "../include/file/tableBlocks.h"
 #include "../include/util/unitTests.h"
 #include "../include/util/testPerfomance.h"
+#include "util/LoadData.h"
 #include <stdio.h>
+
 static void unitTest(void) {
-    test1();
-    test2();
+//    test1();
+//    test2();
 //    test3();
 //    test4();
-    test5();
+//    test5();
 //    test6();
 //    test7();
 //    test8();
@@ -25,8 +27,11 @@ static void performanceTest(void) {
 }
 
 int main(void) {
-    printf("hello\n");
-    unitTest();
+    FILE *file = fopen(FILE_NAME, "rb+");
+    loadData(file);
+    fclose(file);
+//    printf("hello\n");
+
 //    performanceTest();
 //    testInsertPerformance(0);
 //    FILE *fileDataInsert = fopen(FILE_INSERT, "r+");

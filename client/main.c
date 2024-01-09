@@ -6,13 +6,15 @@
 
 
 int main(int argc, char *argv[]) {
-    if (argc != 3) {
-        fprintf(stderr, "Использование: %s <server_ip> <server_port>\n", argv[0]);
-        return 1;
-    }
-
-    const char *server_ip = argv[1];
-    int server_port = atoi(argv[2]);
+//    if (argc != 3) {
+//        fprintf(stderr, "Использование: %s <server_ip> <server_port>\n", argv[0]);
+//        return 1;
+//    }
+//
+//    const char *server_ip = argv[1];
+//    int server_port = atoi(argv[2]);
+    char *server_ip = "127.0.0.1";
+    int server_port = 8095;
 
     int client_socket = create_client_socket(server_ip, server_port);
 
@@ -23,7 +25,7 @@ int main(int argc, char *argv[]) {
         times--;
         printf("Enter a message to send to the server: ");
         input();
-        char * xml = to_xml();
+        char *xml = to_xml();
 
         strncpy(buffer, xml, sizeof(buffer));
         freeAstTree();

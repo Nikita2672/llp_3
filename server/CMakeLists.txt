@@ -18,10 +18,12 @@ add_executable(server
         database/src/util/testPerfomance.c
         database/src/util/unitTests.c
         database/src/util/util.c
-        main.c
-#        database/src/main.c
+#        main.c
+        database/src/main.c
         transfer/from_xml.c
         transfer/from_xml.h
+        database/src/util/LoadData.c
+        database/src/util/LoadData.h
 )
 
 target_link_libraries(server ${LIBXML2_LIBRARIES})
